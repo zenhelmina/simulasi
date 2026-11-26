@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cek Simulasi Warisan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --hijau:#1F3A2E; --hijau2:#2C5240; --krem:#F4EEDF; --krem2:#FBF8F0;
+    --emas:#D9A441; --emas2:#B5832A; --teks:#1F3A2E; --redup:#6B7A70; --garis:#E4DCC8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{font-family:Poppins,system-ui,sans-serif;background:var(--hijau);color:var(--teks);
+    display:flex;justify-content:center;min-height:100dvh}
+  .app{width:100%;max-width:440px;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow-x:hidden}
+  /* header */
+  .top{padding:18px 20px 0;color:var(--krem);display:flex;align-items:center;gap:12px;min-height:56px}
+  .back{width:38px;height:38px;border-radius:50%;border:1px solid rgba(244,238,223,.25);background:transparent;color:var(--krem);
+    font-size:18px;display:grid;place-items:center;cursor:pointer;transition:opacity .2s}
+  .back[hidden]{display:grid;visibility:hidden}
+  .bar{flex:1;height:6px;border-radius:6px;background:rgba(244,238,223,.18);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--emas);border-radius:6px;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+  .step-no{font-size:12px;opacity:.7;min-width:34px;text-align:right}
+  /* card */
+  .sheet{flex:1;margin-top:18px;background:var(--krem);border-radius:28px 28px 0 0;padding:28px 22px calc(24px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;position:relative}
+  .screen{display:none;flex-direction:column;flex:1;animation:masuk .4s cubic-bezier(.2,.8,.2,1)}
+  .screen.on{display:flex}
+  .screen.mundur{animation:masukKiri .4s cubic-bezier(.2,.8,.2,1)}
+  @keyframes masuk{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes masukKiri{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+  .label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--emas2);font-weight:600;margin:0 0 8px}
+  h1,h2{font-family:'Playfair Display',Georgia,serif;margin:0;color:var(--hijau);line-height:1.18}
+  h1{font-size:34px}
+  h2{font-size:27px}
+  .sub{color:var(--redup);font-size:14.5px;line-height:1.55;margin:10px 0 0}
+  .isi{margin-top:26px;display:flex;flex-direction:column;gap:12px}
+  .dorong{flex:1}
+  /* inputs */
+  .field{background:#fff;border:1.5px solid var(--garis);border-radius:16px;padding:12px 16px;transition:border-color .2s, box-shadow .2s}
+  .field:focus-within{border-color:var(--emas);box-shadow:0 0 0 4px rgba(217,164,65,.15)}
+  .field small{display:block;font-size:11.5px;color:var(--redup);margin-bottom:2px}
+  .field input{border:0;outline:0;width:100%;font:500 17px Poppins,sans-serif;color:var(--teks);background:transparent;padding:2px 0}
+  .field.wa{display:flex;align-items:center;gap:10px}
+  .field.wa .kode{font-weight:600;color:var(--hijau);padding-right:10px;border-right:1.5px solid var(--garis)}
+  /* choice cards */
+  .pilih{display:grid;gap:12px}
+  .pilih.dua{grid-template-columns:1fr 1fr}
+  .kartu{background:#fff;border:1.5px solid var(--garis);border-radius:20px;padding:18px 16px;text-align:left;cursor:pointer;
+    font:500 16px Poppins,sans-serif;color:var(--teks);display:flex;align-items:center;gap:12px;transition:transform .15s, border-color .2s, background .2s}
+  .kartu:active{transform:scale(.97)}
+  .kartu .ik{width:44px;height:44px;border-radius:14px;background:var(--krem);display:grid;place-items:center;font-size:22px;flex:none}
+  .pilih.dua .kartu{flex-direction:column;align-items:flex-start;padding:20px 16px}
+  .kartu small{display:block;font-size:12px;color:var(--redup);font-weight:400;margin-top:2px}
+  .kartu.dipilih{border-color:var(--hijau);background:var(--hijau);color:var(--krem)}
+  .kartu.dipilih small{color:rgba(244,238,223,.75)}
+  .kartu.dipilih .ik{background:rgba(244,238,223,.14)}
+  /* stepper */
+  .stepper{display:flex;align-items:center;justify-content:center;gap:22px;margin:18px 0 6px}
+  .stepper button{width:58px;height:58px;border-radius:50%;border:1.5px solid var(--garis);background:#fff;font-size:28px;color:var(--hijau);cursor:pointer}
+  .stepper button:active{transform:scale(.94)}
+  .angka{text-align:center;min-width:120px}
+  .angka input{width:120px;border:0;background:transparent;text-align:center;font:700 64px 'Playfair Display',serif;color:var(--hijau);outline:0;-moz-appearance:textfield}
+  .angka input::-webkit-outer-spin-button,.angka input::-webkit-inner-spin-button{-webkit-appearance:none}
+  .angka span{display:block;font-size:13px;color:var(--redup);margin-top:-4px}
+  .catatan{background:var(--krem2);border:1px dashed var(--emas);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--redup);line-height:1.5}
+  .catatan b{color:var(--hijau)}
+  /* chips */
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .chip{background:#fff;border:1.5px solid var(--garis);border-radius:16px;padding:16px 10px;font:600 18px 'Playfair Display',serif;color:var(--hijau);cursor:pointer;transition:all .2s}
+  .chip:active{transform:scale(.97)}
+  .chip.dipilih{background:var(--hijau);border-color:var(--hijau);color:var(--emas)}
+  .chip.lebar{grid-column:1/-1;font:500 15px Poppins,sans-serif}
+  /* consent */
+  .setuju{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:var(--redup);line-height:1.5;cursor:pointer;margin-top:4px}
+  .setuju input{display:none}
+  .setuju .kotak{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--garis);background:#fff;flex:none;display:grid;place-items:center;margin-top:1px;transition:all .2s}
+  .setuju input:checked + .kotak{background:var(--hijau);border-color:var(--hijau)}
+  .setuju input:checked + .kotak::after{content:'';width:6px;height:11px;border:solid var(--emas);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+  /* review */
+  .ringkas{background:#fff;border-radius:20px;border:1.5px solid var(--garis);overflow:hidden}
+  .baris{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--garis);font-size:14px}
+  .baris:last-child{border-bottom:0}
+  .baris span{color:var(--redup)}
+  .baris b{font-weight:600;text-align:right}
+  .baris a{color:var(--emas2);font-size:12px;margin-left:10px;text-decoration:none;font-weight:600;cursor:pointer}
+  /* buttons */
+  .btn{width:100%;border:0;border-radius:18px;padding:17px;font:600 16px Poppins,sans-serif;cursor:pointer;margin-top:18px;
+    background:var(--hijau);color:var(--krem);transition:opacity .2s, transform .15s;display:flex;justify-content:center;align-items:center;gap:8px}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .btn.emas{background:var(--emas);color:var(--hijau)}
+  .err{color:#A0442C;font-size:12.5px;min-height:18px;margin-top:6px}
+  .pelan{font-size:11.5px;color:var(--redup);text-align:center;margin-top:12px;line-height:1.5}
+  /* welcome */
+  .sambut{padding-top:6px}
+  .tumpuk{display:flex;align-items:flex-end;gap:8px;height:120px;margin:4px 0 26px}
+  .tumpuk div{width:46px;border-radius:8px;background:repeating-linear-gradient(to top,#6E9C76 0 13px,#4F7B58 13px 15px);position:relative;
+    animation:naik .9s cubic-bezier(.2,.8,.2,1) both}
+  .tumpuk div::after{content:'';position:absolute;left:0;right:0;top:45%;height:7px;background:var(--emas)}
+  @keyframes naik{from{height:0}}
+  .poin{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+  .poin div{display:flex;gap:12px;align-items:center;font-size:14px;color:var(--teks)}
+  .poin i{width:30px;height:30px;border-radius:10px;background:#fff;display:grid;place-items:center;font-style:normal;font-size:15px;flex:none}
+  /* done */
+  .selesai{align-items:center;text-align:center;justify-content:center}
+  .centang{width:96px;height:96px;border-radius:50%;background:var(--hijau);display:grid;place-items:center;margin-bottom:22px;animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+  .centang svg{width:46px;height:46px}
+  .centang path{stroke:var(--emas);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:gores .5s .3s forwards}
+  @keyframes pop{from{transform:scale(.4);opacity:0}}
+  @keyframes gores{to{stroke-dashoffset:0}}
+  .wa-kartu{margin-top:22px;background:#fff;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--garis);width:100%}
+  .wa-kartu .ik{width:42px;height:42px;border-radius:12px;background:var(--hijau);color:var(--emas);display:grid;place-items:center;font-size:20px;flex:none}
+  .wa-kartu b{display:block;font-size:14px}
+  .wa-kartu span{font-size:12.5px;color:var(--redup)}
+  .muter{width:18px;height:18px;border:2.5px solid rgba(244,238,223,.35);border-top-color:var(--krem);border-radius:50%;animation:putar .8s linear infinite}
+  @keyframes putar{to{transform:rotate(360deg)}}
+  .hp{position:absolute;left:-9999px}
+  h1,h2,.chip,.angka input{font-variant-numeric:lining-nums}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <button class="back" id="back" hidden aria-label="Kembali">&#8592;</button>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="step-no" id="stepNo"></div>
+  </div>
+
+  <div class="sheet">
+    <!-- 0 · sambutan -->
+    <section class="screen on sambut" data-i="0">
+      <div class="tumpuk">
+        <div style="height:34px;animation-delay:.05s"></div>
+        <div style="height:56px;animation-delay:.15s"></div>
+        <div style="height:80px;animation-delay:.25s"></div>
+        <div style="height:104px;animation-delay:.35s"></div>
+      </div>
+      <p class="label">@zenhelmina</p>
+      <h1>Cek simulasi warisan kamu</h1>
+      <p class="sub">Jawab 6 pertanyaan singkat, nggak sampai 1 menit. Nanti aku hitungin pakai data kamu sendiri.</p>
+      <div class="poin">
+        <div><i>⏱</i>Kurang dari 1 menit</div>
+        <div><i>💬</i>Ilustrasi dikirim lewat WhatsApp</div>
+        <div><i>🔒</i>Data kamu cuma dipakai buat bikin ilustrasi</div>
+      </div>
+      <div class="dorong"></div>
+      <button class="btn" data-next>Mulai</button>
+    </section>
+
+    <!-- 1 · nama -->
+    <section class="screen" data-i="1">
+      <p class="label">Kenalan dulu</p>
+      <h2>Boleh tahu nama kamu?</h2>
+      <div class="isi">
+        <label class="field"><small>Nama panggilan</small><input id="nama" autocomplete="given-name" placeholder="contoh: Rina" maxlength="40"></label>
+        <label class="field"><small>Username Instagram (boleh dikosongin)</small><input id="ig" autocomplete="off" autocapitalize="off" placeholder="@username" maxlength="40"></label>
+        <input class="hp" id="website" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="err" id="err1"></div>
+      <div class="dorong"></div>
+      <button class="btn" id="lanjut1" data-next disabled>Lanjut</button>
+    </section>
+
+    <!-- 2 · jenis kelamin -->
+    <section class="screen" data-i="2">
+      <p class="label">Pertanyaan 2</p>
+      <h2>Jenis kelamin kamu?</h2>
+      <p class="sub">Premi pria dan wanita beda, jadi ini perlu.</p>
+      <div class="isi pilih dua" data-key="jk">
+        <button class="kartu" data-v="Pria"><span class="ik">👨</span>Pria</button>
+        <button class="kartu" data-v="Wanita"><span class="ik">👩</span>Wanita</button>
+      </div>
+      <div class="dorong"></div>
+    </section>
+
+    <!-- 3 · next birthday -->
+    <section class="screen" data-i="3">
+      <p class="label">Pertanyaan 3</p>
+      <h2>Next Birthday</h2>
+      <p class="sub">Umur kamu di ulang tahun berikutnya.</p>
+      <div class="stepper">
+        <button type="button" id="kurang" aria-label="Kurangi">&minus;</button>
+        <div class="angka"><input id="nb" type="number" inputmode="numeric" min="1" max="70" value="31"><span>tahun</span></div>
+        <button type="button" id="tambah" aria-label="Tambah">+</button>
+      </div>
+      <div class="catatan">Contoh: sekarang umur kamu <b>30</b>, berarti Next Birthday-nya <b>31</b>.</div>
+      <div class="err" id="err3"></div>
+      <div class="dorong"></div>
+      <button class="btn" id="lanjut3" data-next>Lanjut</button>
+    </section>
+
+    <!-- 4 · merokok -->
+    <section class="screen" data-i="4">
+      <p class="label">Pertanyaan 4</p>
+      <h2>Kamu merokok?</h2>
+      <p class="sub">Jawab jujur ya, biar hitungannya pas.</p>
+      <div class="isi pilih" data-key="rokok">
+        <button class="kartu" data-v="Tidak merokok"><span class="ik">🌿</span><span>Tidak merokok</span></button>
+        <button class="kartu" data-v="Merokok"><span class="ik">🚬</span><span>Merokok</span></button>
+      </div>
+      <div class="dorong"></div>
+    </section>
+
+    <!-- 5 · uang pertanggungan -->
+    <section class="screen" data-i="5">
+      <p class="label">Pertanyaan 5</p>
+      <h2>Uang Pertanggungan</h2>
+      <p class="sub">Mau warisannya berapa? Ini uang yang nanti diterima ahli waris kamu.</p>
+      <div class="isi chips" id="upChips">
+        <button class="chip" data-v="Rp500 juta">Rp500 jt</button>
+        <button class="chip" data-v="Rp1 miliar">Rp1 M</button>
+        <button class="chip" data-v="Rp2 miliar">Rp2 M</button>
+        <button class="chip" data-v="Rp5 miliar">Rp5 M</button>
+        <button class="chip" data-v="Rp10 miliar">Rp10 M</button>
+        <button class="chip" data-v="Belum tahu">Belum tahu</button>
+        <button class="chip lebar" data-v="lain">Angka lain…</button>
+      </div>
+      <label class="field" id="upLainBox" style="display:none;margin-top:12px"><small>Tulis angkanya</small><input id="upLain" inputmode="text" placeholder="contoh: Rp3 miliar" maxlength="30"></label>
+      <div class="dorong"></div>
+      <button class="btn" id="lanjut5" data-next disabled>Lanjut</button>
+    </section>
+
+    <!-- 6 · whatsapp -->
+    <section class="screen" data-i="6">
+      <p class="label">Terakhir</p>
+      <h2>Ilustrasinya dikirim ke mana?</h2>
+      <p class="sub">Tulis nomor WhatsApp kamu.</p>
+      <div class="isi">
+        <label class="field wa"><span class="kode">+62</span><input id="wa" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="812 3456 7890" maxlength="16"></label>
+        <label class="setuju"><input type="checkbox" id="ok"><span class="kotak"></span><span>Aku setuju dihubungi lewat WhatsApp buat dikirimi ilustrasi.</span></label>
+      </div>
+      <div class="err" id="err6"></div>
+      <div class="dorong"></div>
+      <button class="btn" id="lanjut6" data-next disabled>Lanjut</button>
+    </section>
+
+    <!-- 7 · cek lagi -->
+    <section class="screen" data-i="7">
+      <p class="label">Cek lagi ya</p>
+      <h2>Udah bener semua?</h2>
+      <div class="isi ringkas" id="ringkas"></div>
+      <div class="err" id="errKirim"></div>
+      <div class="dorong"></div>
+      <button class="btn emas" id="kirim">Kirim</button>
+      <p class="pelan">Data kamu cuma dipakai buat bikin ilustrasi dan nggak dibagikan ke orang lain.</p>
+    </section>
+
+    <!-- 8 · selesai -->
+    <section class="screen selesai" data-i="8">
+      <div class="centang"><svg viewBox="0 0 48 48"><path d="M12 25l8 8 16-17"/></svg></div>
+      <h2 id="makasih">Makasih!</h2>
+      <p class="sub">Data kamu udah masuk. Nanti aku kirimin ilustrasinya lewat WhatsApp ya.</p>
+      <div class="wa-kartu"><span class="ik">💬</span><div><b id="waTujuan">+62</b><span>Ilustrasi dikirim ke nomor ini</span></div></div>
+      <p class="pelan" style="margin-top:22px">Angka di ilustrasi tergantung usia, kesehatan, dan ketentuan polis.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var TOTAL_TANYA = 6;           // layar 1..6 = pertanyaan
+  var LAYAR = document.querySelectorAll('.screen');
+  var now = 0, riwayat = [];
+  var d = {nama:'', ig:'', jk:'', nb:31, rokok:'', up:'', wa:''};
+  var $ = function(id){return document.getElementById(id)};
+
+  function tampil(i, mundur){
+    LAYAR[now].classList.remove('on','mundur');
+    now = i;
+    var s = LAYAR[now];
+    s.classList.add('on'); if(mundur) s.classList.add('mundur');
+    $('back').hidden = (now === 0 || now === 8);
+    var p = Math.min(now, TOTAL_TANYA + 1) / (TOTAL_TANYA + 1);
+    $('bar').style.width = (now === 8 ? 100 : p * 100) + '%';
+    $('stepNo').textContent = (now >= 1 && now <= TOTAL_TANYA) ? now + '/' + TOTAL_TANYA : '';
+    if (now === 7) isiRingkas();
+    var f = s.querySelector('input:not(.hp)');
+    if (f && f.type !== 'checkbox' && f.type !== 'number' && window.innerWidth > 600) f.focus();
+  }
+  function maju(){ riwayat.push(now); tampil(now + 1); }
+  function ke(i){ riwayat.push(now); tampil(i); }
+  $('back').onclick = function(){ if (riwayat.length) tampil(riwayat.pop(), true); };
+  document.querySelectorAll('[data-next]').forEach(function(b){ b.onclick = maju; });
+
+  // 1 nama
+  function cekNama(){ d.nama = $('nama').value.trim(); d.ig = $('ig').value.trim(); $('lanjut1').disabled = d.nama.length < 2; }
+  $('nama').oninput = cekNama; $('ig').oninput = cekNama;
+
+  // kartu pilihan (auto lanjut)
+  document.querySelectorAll('.pilih').forEach(function(g){
+    g.querySelectorAll('.kartu').forEach(function(k){
+      k.onclick = function(){
+        g.querySelectorAll('.kartu').forEach(function(x){x.classList.remove('dipilih')});
+        k.classList.add('dipilih'); d[g.dataset.key] = k.dataset.v;
+        setTimeout(maju, 280);
+      };
+    });
+  });
+
+  // 3 next birthday
+  function setNb(v){ v = Math.max(1, Math.min(70, v|0)); d.nb = v; $('nb').value = v; }
+  $('kurang').onclick = function(){ setNb((+$('nb').value || 31) - 1); };
+  $('tambah').onclick = function(){ setNb((+$('nb').value || 31) + 1); };
+  $('nb').oninput = function(){
+    var v = +$('nb').value; var ok = v >= 1 && v <= 70;
+    $('err3').textContent = ok || !$('nb').value ? '' : 'Isi antara 1 sampai 70 ya.';
+    $('lanjut3').disabled = !ok; if (ok) d.nb = v;
+  };
+
+  // 5 UP
+  var chips = $('upChips').querySelectorAll('.chip');
+  chips.forEach(function(c){
+    c.onclick = function(){
+      chips.forEach(function(x){x.classList.remove('dipilih')}); c.classList.add('dipilih');
+      if (c.dataset.v === 'lain'){
+        $('upLainBox').style.display = 'block'; $('upLain').focus();
+        d.up = $('upLain').value.trim(); $('lanjut5').disabled = !d.up;
+      } else {
+        $('upLainBox').style.display = 'none'; d.up = c.dataset.v; $('lanjut5').disabled = false;
+        setTimeout(maju, 280);
+      }
+    };
+  });
+  $('upLain').oninput = function(){ d.up = $('upLain').value.trim(); $('lanjut5').disabled = !d.up; };
+
+  // 6 WA
+  function rapikanWa(v){ v = (v || '').replace(/\D/g, ''); if (v.indexOf('62') === 0) v = v.slice(2); if (v.charAt(0) === '0') v = v.slice(1); return v; }
+  function cekWa(){
+    var w = rapikanWa($('wa').value); d.wa = w;
+    var okNo = /^8\d{7,11}$/.test(w);
+    $('err6').textContent = (!okNo && w.length >= 9) ? 'Nomornya kayaknya belum pas. Contoh: 812 3456 7890' : '';
+    $('lanjut6').disabled = !(okNo && $('ok').checked);
+  }
+  $('wa').oninput = cekWa; $('ok').onchange = cekWa;
+
+  // 7 ringkasan
+  var BARIS = [['Nama','nama',1],['Jenis kelamin','jk',2],['Next Birthday','nb',3],['Merokok','rokok',4],['Uang Pertanggungan','up',5],['WhatsApp','wa',6]];
+  function isiRingkas(){
+    var h = '';
+    BARIS.forEach(function(b){
+      var v = b[1] === 'nb' ? d.nb + ' tahun' : b[1] === 'wa' ? '+62 ' + d.wa : d[b[1]];
+      h += '<div class="baris"><span>' + b[0] + '</span><b>' + esc(v) + '<a data-ke="' + b[2] + '">Ubah</a></b></div>';
+    });
+    $('ringkas').innerHTML = h;
+    $('ringkas').querySelectorAll('a').forEach(function(a){ a.onclick = function(){ ke(+a.dataset.ke); }; });
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // kirim
+  $('kirim').onclick = function(){
+    var b = $('kirim'); b.disabled = true; b.innerHTML = '<span class="muter"></span>Mengirim…'; $('errKirim').textContent = '';
+    var data = {nama:d.nama, ig:d.ig, jk:d.jk, nb:d.nb, rokok:d.rokok, up:d.up, wa:'+62' + d.wa, website:$('website').value, sumber:SUMBER};
+    function berhasil(){
+      $('makasih').textContent = 'Makasih, ' + d.nama + '!';
+      $('waTujuan').textContent = '+62 ' + d.wa;
+      riwayat = []; tampil(8);
+    }
+    function gagal(){
+      b.disabled = false; b.textContent = 'Kirim';
+      $('errKirim').textContent = 'Ups, belum kekirim. Coba pencet Kirim sekali lagi ya.';
+    }
+    if (window.google && google.script && google.script.run){
+      google.script.run.withSuccessHandler(berhasil).withFailureHandler(gagal).simpan(data);
+    } else if (location.protocol === "file:"){
+      setTimeout(berhasil, 900); // pratinjau lokal (belum tersambung ke Sheet)
+    } else {
+      // halaman di luar Google (GitHub Pages): kirim ke Apps Script doPost
+      var body = JSON.stringify(data);
+      fetch(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:body})
+        .then(function(r){ return r.json(); })
+        .then(function(j){ j && j.ok ? berhasil() : gagal(); })
+        .catch(function(){
+          // cadangan kalau browser menolak membaca jawaban: kirim tanpa baca jawaban
+          fetch(API, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:body})
+            .then(berhasil).catch(gagal);
+        });
+    }
+  };
+
+  var API = "https://script.google.com/macros/s/AKfycbwNx0GcMrZrhWR-UXSHQ-VlZqS2Z51k28ny_tlNigDqBkDeQlDkE0Myw207xSGbBVsa/exec";
+  var SUMBER = new URLSearchParams(location.search).get('src') || '';
+  try { google.script.url.getLocation(function(l){ SUMBER = (l.parameter && l.parameter.src) || SUMBER; }); } catch(e) {}
+  tampil(0);
+})();
+</script>
+</body>
+</html>
